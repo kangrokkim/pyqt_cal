@@ -42,16 +42,28 @@ class Main(QDialog):
         layout_operation.addWidget(button_division)
 
         ### =, clear, backspace 버튼 생성
+        button_root = QPushButton("x**2")
+        button_sqr = QPushButton("x^2")
+        button_reverse = QPushButton("1/x")
+        button_remain = QPushButton("%")
         button_equal = QPushButton("=")
-        button_clear = QPushButton("Clear")
-        button_backspace = QPushButton("Backspace")
+        button_clear = QPushButton("C")
+        button_backspace = QPushButton("CE")
 
         ### =, clear, backspace 버튼 클릭 시 시그널 설정
+        button_root.clicked.connect(self.button_root_clicked)
+        button_sqr.clicked.connect(self.button_sqr_clicked)
+        button_reverse.clicked.connect(self.button_reverse_clicked)
+        button_remain.clicked.connect(lambda state, operation = "%": self.button_operation_clicked(operation))
         button_equal.clicked.connect(self.button_equal_clicked)
         button_clear.clicked.connect(self.button_clear_clicked)
-        button_backspace.clicked.connect(self.button_backspace_clicked)
+        button_backspace.clicked.connect(self.button_clear_clicked)
 
         ### =, clear, backspace 버튼을 layout_clear_equal 레이아웃에 추가
+        layout_clear_equal.addWidget(button_root)
+        layout_clear_equal.addWidget(button_sqr)
+        layout_clear_equal.addWidget(button_reverse)
+        layout_clear_equal.addWidget(button_remain)
         layout_clear_equal.addWidget(button_clear)
         layout_clear_equal.addWidget(button_backspace)
         layout_clear_equal.addWidget(button_equal)
@@ -107,13 +119,26 @@ class Main(QDialog):
 
     def button_clear_clicked(self):
         self.eqsol.setText("")
-        self.solution.setText("")
 
-    def button_backspace_clicked(self):
+    def button_reverse_clicked(self):
         eqsol = self.eqsol.text()
-        eqsol = eqsol[:-1]
-        self.eqsol.setText(eqsol)
+        eqsol = "1/"+eqsol
+        eqsol = eval(eqsol)
+        self.eqsol.setText(str(eqsol))
 
+    def button_sqr_clicked(self):
+        eqsol = self.eqsol.text()
+        eqsol = eqsol+"*"+eqsol
+        eqsol = eval(eqsol)
+        self.eqsol.setText(str(eqsol))
+
+    def button_root_clicked(self):
+        eqsol = self.eqsol.text()
+        eqsol = eqsol + "**0.5"
+        eqsol = eval(eqsol)
+        self.eqsol.setText(str(eqsol))
+        
+    
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     main = Main()
