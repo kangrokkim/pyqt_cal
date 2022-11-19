@@ -90,8 +90,6 @@ class Main(QDialog):
         button_dot.clicked.connect(lambda state, num = ".": self.number_button_clicked(num))
         layout_clear_equal.addWidget(button_dot, 5, 2)
 
-        
-
         main_layout.addLayout(layout_equation_solution)
         main_layout.addLayout(layout_clear_equal)
 
