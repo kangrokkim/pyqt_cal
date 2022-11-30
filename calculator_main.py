@@ -1,6 +1,7 @@
 import sys
 from PyQt5.QtWidgets import *
-
+import math
+import numpy as np
 class Main(QDialog):
     def __init__(self):
         super().__init__()
@@ -8,114 +9,140 @@ class Main(QDialog):
 
     def init_ui(self):
         main_layout = QVBoxLayout()
-
-        ### 각 위젯을 배치할 레이아웃을 미리 만들어 둠
-        layout_operation = QHBoxLayout()
-        layout_clear_equal = QHBoxLayout()
-        layout_number = QGridLayout()
+        layout_clear_equal = QGridLayout()
         layout_equation_solution = QFormLayout()
+        lable_eqsol=QLabel("")
+        self.eqsol = QLineEdit("")
+        layout_equation_solution.addRow(lable_eqsol, self.eqsol)
 
-        ### 수식 입력과 답 출력을 위한 LineEdit 위젯 생성
-        label_equation = QLabel("Equation: ")
-        label_solution = QLabel("Number: ")
-        self.equation = QLineEdit("")
-        self.solution = QLineEdit("")
 
-        ### layout_equation_solution 레이아웃에 수식, 답 위젯을 추가
-        layout_equation_solution.addRow(label_equation, self.equation)
-        layout_equation_solution.addRow(label_solution, self.solution)
-
-        ### 사칙연상 버튼 생성
-        button_plus = QPushButton("+")
-        button_minus = QPushButton("-")
-        button_product = QPushButton("x")
         button_division = QPushButton("/")
+        button_product = QPushButton("x")
+        button_minus = QPushButton("-")
+        button_plus = QPushButton("+")
+        
+        stack=[0,0,0]
+    
+        button_product.clicked.connect(lambda state, operation = "*": self.button_operation_clicked(operation,stack))
+        button_division.clicked.connect(lambda state, operation = "/": self.button_operation_clicked(operation,stack))
+        button_minus.clicked.connect(lambda state, operation = "-": self.button_operation_clicked(operation,stack))
+        button_plus.clicked.connect(lambda state, operation = "+": self.button_operation_clicked(operation,stack))
+        
+        
+        
 
-        ### 사칙연산 버튼을 클릭했을 때, 각 사칙연산 부호가 수식창에 추가될 수 있도록 시그널 설정
-        button_plus.clicked.connect(lambda state, operation = "+": self.button_operation_clicked(operation))
-        button_minus.clicked.connect(lambda state, operation = "-": self.button_operation_clicked(operation))
-        button_product.clicked.connect(lambda state, operation = "*": self.button_operation_clicked(operation))
-        button_division.clicked.connect(lambda state, operation = "/": self.button_operation_clicked(operation))
-
-        ### 사칙연산 버튼을 layout_operation 레이아웃에 추가
-        layout_operation.addWidget(button_plus)
-        layout_operation.addWidget(button_minus)
-        layout_operation.addWidget(button_product)
-        layout_operation.addWidget(button_division)
-
-        ### =, clear, backspace 버튼 생성
+        button_root = QPushButton("x**2")
+        button_sqr = QPushButton("x^2")
+        button_reverse = QPushButton("1/x")
+        button_remain = QPushButton("%")
         button_equal = QPushButton("=")
-        button_clear = QPushButton("Clear")
-        button_backspace = QPushButton("Backspace")
+        button_clear = QPushButton("C")
+        button_backspace = QPushButton("CE")
 
-        ### =, clear, backspace 버튼 클릭 시 시그널 설정
-        button_equal.clicked.connect(self.button_equal_clicked)
+
+
+        button_root.clicked.connect(self.button_root_clicked)
+        button_sqr.clicked.connect(self.button_sqr_clicked)
+        button_reverse.clicked.connect(self.button_reverse_clicked)
+        button_remain.clicked.connect(lambda state, operation = "%": self.button_operation_clicked(operation,stack))
+        button_equal.clicked.connect(lambda state, operation = "=": self.button_equal_clicked(stack))
         button_clear.clicked.connect(self.button_clear_clicked)
-        button_backspace.clicked.connect(self.button_backspace_clicked)
+        button_backspace.clicked.connect(self.button_clear_clicked)
 
-        ### =, clear, backspace 버튼을 layout_clear_equal 레이아웃에 추가
-        layout_clear_equal.addWidget(button_clear)
-        layout_clear_equal.addWidget(button_backspace)
-        layout_clear_equal.addWidget(button_equal)
+        layout_clear_equal.addWidget(button_root,1,2)
+        layout_clear_equal.addWidget(button_sqr,1,1)
+        layout_clear_equal.addWidget(button_reverse,1,0)
+        layout_clear_equal.addWidget(button_remain,0,0)
+        layout_clear_equal.addWidget(button_clear,0,2)
+        layout_clear_equal.addWidget(button_backspace,0,1)
+        layout_clear_equal.addWidget(button_equal,5,3)
+        layout_clear_equal.addWidget(button_product,2,3)
+        layout_clear_equal.addWidget(button_division,1,3)
+        layout_clear_equal.addWidget(button_minus,3,3)
+        layout_clear_equal.addWidget(button_plus,4,3)
 
-        ### 숫자 버튼 생성하고, layout_number 레이아웃에 추가
-        ### 각 숫자 버튼을 클릭했을 때, 숫자가 수식창에 입력 될 수 있도록 시그널 설정
         number_button_dict = {}
         for number in range(0, 10):
             number_button_dict[number] = QPushButton(str(number))
             number_button_dict[number].clicked.connect(lambda state, num = number:
-                                                       self.number_button_clicked(num))
-            if number >0:
-                x,y = divmod(number-1, 3)
-                layout_number.addWidget(number_button_dict[number], x, y)
-            elif number==0:
-                layout_number.addWidget(number_button_dict[number], 3, 1)
+                                                       self.number_button_clicked(num,stack))
+    
+                
+            if number==0:
+                layout_clear_equal.addWidget(number_button_dict[number], 5, 1)
 
-        ### 소숫점 버튼과 00 버튼을 입력하고 시그널 설정
+                
+        layout_clear_equal.addWidget(number_button_dict[7], 2, 0)
+        layout_clear_equal.addWidget(number_button_dict[8], 2, 1)
+        layout_clear_equal.addWidget(number_button_dict[9], 2, 2)
+        layout_clear_equal.addWidget(number_button_dict[4], 3, 0)
+        layout_clear_equal.addWidget(number_button_dict[5], 3, 1)
+        layout_clear_equal.addWidget(number_button_dict[6], 3, 2)
+        layout_clear_equal.addWidget(number_button_dict[1], 4, 0)
+        layout_clear_equal.addWidget(number_button_dict[2], 4, 1)
+        layout_clear_equal.addWidget(number_button_dict[3], 4, 2)
+        
         button_dot = QPushButton(".")
-        button_dot.clicked.connect(lambda state, num = ".": self.number_button_clicked(num))
-        layout_number.addWidget(button_dot, 3, 2)
+        button_dot.clicked.connect(lambda state, num = ".": self.number_button_clicked(num,stack))
+        layout_clear_equal.addWidget(button_dot, 5, 2)
 
-        button_double_zero = QPushButton("00")
-        button_double_zero.clicked.connect(lambda state, num = "00": self.number_button_clicked(num))
-        layout_number.addWidget(button_double_zero, 3, 0)
+        
 
-        ### 각 레이아웃을 main_layout 레이아웃에 추가
         main_layout.addLayout(layout_equation_solution)
-        main_layout.addLayout(layout_operation)
         main_layout.addLayout(layout_clear_equal)
-        main_layout.addLayout(layout_number)
 
         self.setLayout(main_layout)
         self.show()
 
-    #################
-    ### functions ###
-    #################
-    def number_button_clicked(self, num):
-        equation = self.equation.text()
-        equation += str(num)
-        self.equation.setText(equation)
+    def number_button_clicked(self, num,stack):
+        eqsol = self.eqsol.text()
+        eqsol += str(num)
+        stack.append(eqsol)
+        self.eqsol.setText(eqsol)
 
-    def button_operation_clicked(self, operation):
-        equation = self.equation.text()
-        equation += operation
-        self.equation.setText(equation)
-
-    def button_equal_clicked(self):
-        equation = self.equation.text()
-        solution = eval(equation)
-        self.solution.setText(str(solution))
+        
+    def button_operation_clicked(self, operation,stack):
+        eqsol = self.eqsol.text()
+        eqsol += operation
+        stack.append(operation)
+        self.eqsol.setText("")
+    def button_equal_clicked(self,stack):
+        eqsol = self.eqsol.text()
+        list = [0,0,0]
+        list[0]=stack.pop()
+        list[1]=stack.pop()
+        list[2]=stack.pop()
+        if list[1] == '+':
+            eqsol= int(list[2])+int(list[0])
+        elif list[1] == '-':
+            eqsol= int(list[2])-int(list[0])
+        elif list[1] == '*':
+            eqsol= int(list[2])*int(list[0])
+        elif list[1] == '/':
+            eqsol= int(list[2])/int(list[0])
+        elif list[1] == '%':
+            eqsol= int(list[2])%int(list[0])
+        self.eqsol.setText(str(eqsol))
 
     def button_clear_clicked(self):
-        self.equation.setText("")
-        self.solution.setText("")
+        self.eqsol.setText("")
 
-    def button_backspace_clicked(self):
-        equation = self.equation.text()
-        equation = equation[:-1]
-        self.equation.setText(equation)
+    def button_reverse_clicked(self):
+        eqsol = self.eqsol.text()
+        eqsol = np.reciprocal(float(eqsol))
+        self.eqsol.setText(str(eqsol))
 
+    def button_sqr_clicked(self):
+        eqsol = self.eqsol.text()
+        eqsol = math.pow(float(eqsol), 2)
+        self.eqsol.setText(str(eqsol))
+
+    def button_root_clicked(self):
+        eqsol = self.eqsol.text()
+        eqsol = math.sqrt(float(eqsol))
+        self.eqsol.setText(str(eqsol))
+        
+    
 if __name__ == '__main__':
     app = QApplication(sys.argv)
     main = Main()
